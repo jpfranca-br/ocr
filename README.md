@@ -15,6 +15,25 @@ Provide YOLOv8 model weights for:
 - Vehicle and license plate detection (`ALPR_DETECTION_MODEL`, default `models/vehicle_plate.pt`)
 - Character recognition (`ALPR_RECOGNITION_MODEL`, default `models/plate_recognition.pt`)
 
+### Obtaining YOLOv8 weights
+
+1. Visit the [Ultralytics model hub](https://github.com/ultralytics/ultralytics/releases) or your internal model registry and download the trained weight files (`.pt`).
+2. Place the files in a directory accessible to the service (for example, `models/`).
+3. Set the environment variables before starting the service so the FastAPI app can load the files:
+
+   ```bash
+   export ALPR_DETECTION_MODEL=/absolute/path/to/vehicle_plate.pt
+   export ALPR_RECOGNITION_MODEL=/absolute/path/to/plate_recognition.pt
+   ```
+
+You can also override the paths inline when launching Uvicorn:
+
+```bash
+ALPR_DETECTION_MODEL=models/vehicle_plate.pt \
+ALPR_RECOGNITION_MODEL=models/plate_recognition.pt \
+uvicorn alpr.service:app --host 0.0.0.0 --port 9999
+```
+
 The service expects the detection model to output bounding boxes labelled with vehicle classes (e.g. `car`, `truck`, `bus`) and plate classes (e.g. `license_plate`). The recognition model should output character-level detections whose class names are the plate characters.
 
 ## Running the service
@@ -38,6 +57,17 @@ Optional environment variables:
 
 - `GET /health` – health check endpoint.
 - `POST /alpr` – accepts an image file upload. Returns JSON with detection metadata, candidate plates, and the path to the annotated image saved in `alpr/output/`.
+
+### Example cURL request
+
+```bash
+curl -X POST "http://localhost:9999/alpr" \
+  -H "accept: application/json" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@/path/to/your/image.jpg"
+```
+
+The response contains the processed metadata and the relative path to the annotated image in `alpr/output/`.
 
 ## Output
 
